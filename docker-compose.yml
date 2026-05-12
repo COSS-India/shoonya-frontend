@@ -1,0 +1,12 @@
+services:
+  frontend:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      HOST: "0.0.0.0"
+      PORT: "3000"
+      CI: "false"
+      # Browser-accessible API (same host as Django). Change here if the server IP/domain changes.
+      REACT_APP_APIGW_BASE_URL: "http://13.202.90.149:8000"
+    restart: unless-stopped

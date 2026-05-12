@@ -1,8 +1,10 @@
+// CRA reads REACT_APP_* at compile/start time. Default suits local npm start; Docker passes the real API URL.
+const backendBaseUrl =
+  process.env.REACT_APP_APIGW_BASE_URL || "http://localhost:8000";
+
 const configs = {
-  BASE_URL: "http://localhost:8000",
-  BASE_URL_AUTO: process.env.REACT_APP_APIGW_BASE_URL
-    ? process.env.REACT_APP_APIGW_BASE_URL
-        :"http://localhost:8000"
+  BASE_URL: backendBaseUrl,
+  BASE_URL_AUTO: backendBaseUrl,
 };
 
 export default configs;
