@@ -100,6 +100,28 @@ const StyledMenu = styled((props) => (
   },
 }));
 
+// Ensure textarea result `value.text` is always string[] before handing to LSF.
+// LSF/MST union type expects `(string | string[]) | undefined?`; other shapes crash on typing.
+const normalizeAnnotationResults = (annotations) => {
+  if (!Array.isArray(annotations)) return annotations;
+  annotations.forEach((annotation) => {
+    if (!annotation || !Array.isArray(annotation.result)) return;
+    annotation.result.forEach((item) => {
+      if (!item || item.type === "relation" || !item.value) return;
+      if (!("text" in item.value)) return;
+      const t = item.value.text;
+      if (t == null) {
+        item.value.text = [""];
+      } else if (Array.isArray(t)) {
+        item.value.text = t.length > 0 ? [String(t[0] ?? "")] : [""];
+      } else {
+        item.value.text = [String(t)];
+      }
+    });
+  });
+  return annotations;
+};
+
 const filterAnnotations = (
   annotations,
   user,
@@ -375,6 +397,7 @@ useEffect(() => {
       setDisableButton,
       taskData
     );
+    normalizeAnnotationResults(filteredAnnotations);
     if (taskData.task_status === "freezed") {
       interfaces = [
         "panel",
@@ -648,12 +671,27 @@ useEffect(() => {
               showLoader();
 
               for (let i = 0; i < temp.length; i++) {
+                  if (temp[i].type === "relation") {
+                      continue;
+                  } else if (temp[i].value && temp[i].value.text != null) {
+                      const t = temp[i].value.text;
+                      if (Array.isArray(t)) {
+                          temp[i].value.text = t.length > 0 ? [String(t[0])] : [""];
+                      } else {
+                          temp[i].value.text = [String(t)];
+                      }
+                  }
+              }
+
+
+
+              /* for (let i = 0; i < temp.length; i++) {
                 if(temp[i].type === "relation"){
                   continue;
                 }else if (temp[i].value.text) {
                   temp[i].value.text = [temp[i].value.text[0]];
                 }
-              }
+              } */
 
               let review = annotations.filter(
                 (annotation) => annotation.annotation_type === 2
@@ -1065,7 +1103,7 @@ useEffect(() => {
           selectedLanguages,
           ocrDomain
         ).then((res) => {
-          if (res.status !== 200) {
+          if (!res || res.status !== 200) {
             setSnackbarInfo({
               open: true,
               message: "Error in autosaving annotation",
@@ -1113,7 +1151,7 @@ useEffect(() => {
           selectedLanguages,
           ocrDomain
         ).then((res) => {
-          if (res.status !== 200) {
+          if (!res || res.status !== 200) {
             setSnackbarInfo({
               open: true,
               message: "Error in clearing children bboxes",

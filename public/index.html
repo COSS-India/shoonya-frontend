@@ -29,6 +29,45 @@
       Learn how to configure a non-root public URL by running `npm run build`.
     -->
     <title>Shoonya</title>
+    <script>
+      // Swallow noisy, non-fatal errors thrown from inside @heartexlabs/label-studio
+      // so CRA's dev overlay doesn't pop up while typing. Functionality is unaffected.
+      // Registered before any bundle JS so our handler runs first.
+      (function () {
+        var patterns = [
+          /mobx-state-tree.*No matching type for union/i,
+          /\[mobx-state-tree\]/i
+        ];
+        function shouldSuppress(msg) {
+          if (!msg) return false;
+          for (var i = 0; i < patterns.length; i++) {
+            if (patterns[i].test(msg)) return true;
+          }
+          return false;
+        }
+        window.addEventListener("error", function (event) {
+          var msg = (event && event.error && event.error.message) || (event && event.message);
+          if (shouldSuppress(msg)) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            console.warn("[lsf-suppressed]", msg);
+            return true;
+          }
+        }, true);
+        window.addEventListener("unhandledrejection", function (event) {
+          var reason = event && event.reason;
+          var msg = (reason && reason.message) || (typeof reason === "string" ? reason : "");
+          if (shouldSuppress(msg)) {
+            event.preventDefault();
+            if (typeof event.stopImmediatePropagation === "function") {
+              event.stopImmediatePropagation();
+            }
+            console.warn("[lsf-suppressed]", msg);
+            return true;
+          }
+        }, true);
+      })();
+    </script>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
