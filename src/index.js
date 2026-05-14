@@ -1,3 +1,4 @@
+import './polyfills/cryptoRandomUUID';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
@@ -7,6 +8,21 @@ import { ThemeProvider } from '@mui/material';
 import themeDefault from './ui/theme/theme';
 import {Provider} from 'react-redux';
 import store from './redux/store/store';
+
+// Disable CRA's dev "Uncaught runtime errors" overlay. The label-studio bundle
+// throws non-fatal mobx-state-tree errors while typing; the overlay covers the
+// UI even though the app keeps working. Errors still appear in the console.
+if (process.env.NODE_ENV === 'development') {
+  try {
+    // eslint-disable-next-line global-require, import/no-extraneous-dependencies
+    const overlay = require('react-error-overlay');
+    if (overlay && typeof overlay.stopReportingRuntimeErrors === 'function') {
+      overlay.stopReportingRuntimeErrors();
+    }
+  } catch (_) {
+    // react-error-overlay not installed — ignore.
+  }
+}
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
